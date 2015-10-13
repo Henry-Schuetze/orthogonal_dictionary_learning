@@ -20,10 +20,10 @@ clear('params');
 
 % Choose a method...
 %
-%   either from CONSTRAINED K-SPARSE MODEL:
+%   either from CONSTRAINED K-SPARSE model:
 %       {'CA', 'OSC', 'GF-OSC_cooling_learnrate', 'GF-OSC_line_search'}
 %
-%   or from UNCONSTRAINED LAGRANGIAN MODEL:
+%   or from UNCONSTRAINED LAGRANGIAN model:
 %       { 'DDTFC',  'lambda-OSC', 'lambda-GF-OSC_cooling_learnrate', 'lambda-GF-OSC_line_search'} 
 method = 'lambda-GF-OSC_cooling_learnrate';
 params = default_learning_params(method);
