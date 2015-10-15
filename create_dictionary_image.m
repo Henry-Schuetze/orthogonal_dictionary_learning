@@ -2,10 +2,10 @@
 %   grid_line_color, scale_flag)
 %
 % Creates a image of dictionary C in which each atom is represented as a 
-% square patch on a (square) grid. Thus the number of rows of matrix C 
-% needs to be a square number. From each patch its mean is subtracted,
+% square patch arranged on a (square) grid. The number of rows of matrix C 
+% has to be a square number. From each patch its mean is subtracted, 
 % subsequently the patch is scaled to unit supremum norm and finally 
-% shifted and rescaled into the interval [0 1].
+% shifted and rescaled to match the interval [0 1].
 %
 % INPUT:
 % ======
@@ -13,25 +13,31 @@
 %   dictionary (num_dims x num_atoms)
 %
 % seq_vec (optional, default: 1:num_atoms):
-%   sequence that defines the order of atoms in the dictionary image. 
-%   seq_vec should be a permutation of 1:num_atoms.
+%   index sequence that defines the order of atoms in the dictionary image.
+%   seq_vec should be a permutation of 1:num_atoms. The patches will be
+%   arranged on the grid in a "column major" fashion.
 %
 % discard_dc_flag (optional, default: false):
-%   boolean to estimate the dc component and prevent its scaling to unit
-%   supremum norm
+%   if true the dc component is estimated and its scaling to unit supremum 
+%   norm is prevented
 %
 % grid_line_color (optional, default: 1):
-%   defines the color of grid lines between the patches in black
-%   (0), red (1), green (2) or blue (3)
+%   defines the color of grid lines between the patches; possible values
+%   are: 0 (black), 1 (red), 2 (green) or 3 (blue)
 % 
 % scale_flag (optional, default: true)
-%   defines if patches are allowed to be scaled (i.e. normalized)
+%   if true patches are allowed to be normalized (see normalize_patch)
 %
 % OUTPUT:
 % =======
 % dict_img:
 %   image of the dictionary. Each atom is represented by a suare patch. The
 %   atom patches are ordered in column major according to seq_vec.
+
+% Henry Schuetze 
+% Institute for Neuro- and Bioinformatics
+% University of Luebeck, Germany
+% Henry.Schuetze@uni-luebeck.de
 function dict_img = create_dictionary_image(C, seq_vec, ...
     discard_dc_flag, grid_line_color, scale_flag)
 
@@ -78,17 +84,18 @@ else
     dict_img = nan(ceil(sqrt(num_atoms))*(1+sqrt(num_dims))-1);
 end
 
-for i = 1:ceil(sqrt(num_atoms))^2
+for atom_idx = 1:ceil(sqrt(num_atoms))^2
 
-    [x, y] = ind2sub(ceil(sqrt(num_atoms))*[1, 1], i);
+    [x, y] = ind2sub(ceil(sqrt(num_atoms))*[1, 1], atom_idx);
     
-    if i <= length(seq_vec)
-        u = C(:, seq_vec(i));
+    if atom_idx <= length(seq_vec)
+        atom = C(:, seq_vec(atom_idx));
 
         if discard_dc_flag && (x==dc_x) && (y==dc_y)
-            patch = reshape(u, sqrt(num_dims), sqrt(num_dims)) + 0.5;
+            % shift dc component by mean gray value
+            patch = reshape(atom, sqrt(num_dims), sqrt(num_dims)) + 0.5;
         else
-            patch = reshape(u, sqrt(num_dims), sqrt(num_dims));
+            patch = reshape(atom, sqrt(num_dims), sqrt(num_dims));
             if scale_flag
                 patch = normalize_patch(patch);
             end
@@ -98,10 +105,12 @@ for i = 1:ceil(sqrt(num_atoms))^2
     end
 
     if grid_line_color ~= 0
+        % colored grid lines
         patch = repmat(patch, [1 1 3]);
         dict_img(((x-1)*(sqrt(num_dims)+1)+1) : x*(sqrt(num_dims)+1)-1, ...
             ((y-1)*(sqrt(num_dims)+1)+1) : y*(sqrt(num_dims)+1)-1, :) = patch;
     else
+        % black grid lines
         dict_img(((x-1)*(sqrt(num_dims)+1)+1) : x*(sqrt(num_dims)+1)-1, ...
             ((y-1)*(sqrt(num_dims)+1)+1) : y*(sqrt(num_dims)+1)-1) = patch;
     end

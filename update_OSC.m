@@ -1,47 +1,71 @@
+% params = update_OSC(params)
+%
+% Performs an orthogonal dictionary update according to the OSC algorithm.
+%
+% [1] Schütze, H., Barth, E., and Martinetz, T. "Learning Efficient Data 
+% Representations with Orthogonal Sparse Coding", submitted 2014
+%
+% INPUT: params
+% ======
+% 
+% params.x (required):
+%   data sample (num_dims x 1)
+%
+% params.U (required):
+%   complete orthogonal dictionary (num_dims x num_dims)
+%
+% params.eps_i (required):
+%   initial learning rate
+%
+% params.eps_f (required):
+%   final learning rate
+%
+% params.t (required):
+%   iteration counter of performed learning steps
+%
+% params.params.t_max (required):
+%   maximal number of learning steps
+%
+% params.sparse_mode (required):
+%   a string with value either 'column_k-sparse' or 'hard_thresh' selecting
+%   the sparse model
+%
+% params.sparsity_param (required):
+%   sparsity parameter corresponding to the sparse model, i.e., either the 
+%   number of non-zero coefficients (if sparse_mode == 'column_k-sparse') 
+%   or the hard threshold (if sparse_mode == 'hard_thresh')
+%
+% OUTPUT: params
+% =======
+%
+% params.U:
+%   updated dictionary
+
+% Henry Schuetze 
+% Institute for Neuro- and Bioinformatics
+% University of Luebeck, Germany
+% Henry.Schuetze@uni-luebeck.de
 function params = update_OSC(params)
 
-[~, seq_vec] = sparse_coefficients(params.x, params.U, 'column_k-sparse', params);
+[~, seq_vec] = sparse_coefficients(params.x, params.U, ...
+    params.sparse_mode, params.sparsity_param);
 eps_t = params.eps_i * (params.eps_f/params.eps_i)^(params.t/params.t_max);
 
-x_r = params.x;
-
-% tStart = tic;
-for i = 1 : size(params.U,2)
-    for l = 1 : (i-1)
-        params.U(:, seq_vec(i)) = params.U(:, seq_vec(i)) - ...
-            (params.U(:, seq_vec(i))'*params.U(:, seq_vec(l))) * params.U(:,seq_vec(l));
+for k = 1 : size(params.U,2)
+    for l = 1 : (k-1)
+        % orthogonalize atom u_k subject to update u_1,...,u_(k-1)
+        params.U(:, seq_vec(k)) = params.U(:, seq_vec(k)) - ...
+            (params.U(:, seq_vec(k))'*params.U(:, seq_vec(l))) * params.U(:,seq_vec(l));
     end
-    if i <= params.k
-        % u_k = u_k / sqrt(sum(u_k.^2));
-        params.U(:, seq_vec(i)) = params.U(:, seq_vec(i)) + eps_t * (params.U(:, seq_vec(i))'* x_r) * x_r;
+    
+    if k <= params.sparsity_param
+        % Hebbian-like main update
+        params.U(:, seq_vec(k)) = params.U(:, seq_vec(k)) + eps_t * (params.U(:, seq_vec(k))'* params.x) * params.x;
     end
-    params.U(:, seq_vec(i)) = params.U(:, seq_vec(i)) / sqrt(sum(params.U(:, seq_vec(i)).^2));
-    x_r = x_r - (params.U(:, seq_vec(i))'*x_r)*params.U(:, seq_vec(i));
+    
+    % normalize atom u_k
+    params.U(:, seq_vec(k)) = params.U(:, seq_vec(k)) / sqrt(sum(params.U(:, seq_vec(k)).^2));
+    
+    % update residual
+    params.x = params.x - (params.U(:, seq_vec(k))'*params.x)*params.U(:, seq_vec(k));
 end
-
-% tElapsed = toc(tStart);
-% fprintf('dictionary update took: %.4fs\n', tElapsed);
-
-
-% 
-% function params.U = dictionary_update_OSC_II(params.U, x_r, seq_vec, K, eps_t)
-% 
-% tStart = tic;
-% U_old = zeros(size(params.U,1), size(params.U,2)+1);
-% U_old(:,1:(end-1)) = params.U;
-% U_old(:,end) = x_r;
-% 
-% for i = 1 : size(params.U,2)
-%     params.U(:, seq_vec(i)) = U_old(:, seq_vec(i)) + eps_t * (U_old(:, seq_vec(i))'* U_old(:,end));
-%     params.U(:, seq_vec(i)) = params.U(:, seq_vec(i)) ./ sqrt(sum(params.U(:, seq_vec(i)).^2));
-% 
-%     U_old = U_old - params.U(:, seq_vec(i)) * (params.U(:, seq_vec(i))' * U_old);
-%     
-% %     params.U(:, seq_vec((i+1):end)) = params.U(:, seq_vec((i+1):end)) - ...
-% %         params.U(:, seq_vec(i)) * (params.U(:, seq_vec(i))' *  params.U(:, seq_vec((i+1):end)));
-%     
-% %    x_r = x_r - ...
-% %        U_new(:, seq_vec(i)) * (U_new(:, seq_vec(i))' *  x_r);
-% end
-% tElapsed = toc(tStart);
-% fprintf('dictionary update took: %.4fs\n', tElapsed);

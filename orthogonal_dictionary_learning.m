@@ -6,6 +6,15 @@
 %   data matrix (num_dims x num_samples), where each column represents a
 %   sample
 %
+% params.sparse_mode (required):
+%   a string with value either 'column_k-sparse' or 'hard_thresh' selecting
+%   the sparse model
+%
+% params.sparsity_param (required):
+%   sparsity parameter corresponding to the sparse model, i.e., either the 
+%   number of non-zero coefficients (if sparse_mode == 'column_k-sparse') 
+%   or the hard threshold (if sparse_mode == 'hard_thresh')
+%
 % params.num_epochs (required):
 %   number of full batch iterations
 %
@@ -13,7 +22,7 @@
 %   initial complete orthogonal dictionary
 %
 % params.cost_interval (optional):
-%   if set, a cost function is evaluated with respect to U each time
+%   if set, a cost function is evaluated with respect to X and U each time
 %   the epoch counter has a value which is a multiple of cost_interval
 %
 % params.U_ref (optional):
@@ -34,10 +43,10 @@
 %   the atoms represent square patches) each time the epoch counter has a
 %   value which is a multiple of img_seq_interval
 %
-% params.plot_dict_interval (optional): 
+% params.plot_dict_interval (optional, default: false): 
 %   if set, an image of the current dictionary is shown (assuming the
 %   atoms represent square patches) each time the epoch counter has a value
-%   which is a multiple of img_seq_interval
+%   which is a multiple of plot_dict_interval
 %
 % params.verbose_flag (optional, default: true)
 %   if set, output messages are printed during iterations
@@ -52,7 +61,12 @@
 %
 % result.sim_mat:
 %   matrix that columnwise contains the overlaps of matching atoms from U
-%   and U_ref.
+%   and U_ref
+
+% Henry Schuetze 
+% Institute for Neuro- and Bioinformatics
+% University of Luebeck, Germany
+% Henry.Schuetze@uni-luebeck.de
 function result = orthogonal_dictionary_learning(params)
 
 result = struct('U', []);
@@ -64,7 +78,7 @@ if isfield(params, 'U_init')
     params.U = params.U_init;
 else
     % randomly create initial orthogonal dictionary
-    params.U = gram_schmidt(randn(num_dims));
+    params.U = solve_orth_procrustes(randn(num_dims));
 end
 
 % prepare iterative computation of cost function
@@ -81,7 +95,7 @@ if sim_flag
     end
 
     result.sim_mat = zeros(num_dims, floor(params.num_epochs/params.sim_interval)+1);
-	result.sim_mat(:,1) = basis_similarity(params.U_ref, params.U);
+	result.sim_mat(:,1) = dictionary_similarity(params.U_ref, params.U);
         
     if ~isfield(params, 'sim_stop_thresh')
         params.sim_stop_thresh = .9999;
@@ -105,11 +119,16 @@ else
     verbose_flag = params.verbose_flag;
 end
 
+% extend params for online learning methods
 if strcmp(params.learn_type, 'online')
+    % provide a learn step counter and the total number of learning steps 
+    % in order to allow computation of variable parameters, e.g., a cooling
+    % learning rate
     params.t = 0;
     params.t_max = params.num_epochs * num_samples;
     
-    % set seed of random number generator
+    % set seed of the random number generator, e.g., to obtain a
+    % deterministic random sequence of data samples
     if isfield(params, 'rand_seed')
         rng(params.rand_seed, 'twister');
     else
@@ -140,12 +159,12 @@ for epoch = 1:params.num_epochs
         if sim_flag
             % get sequence to match dictionry atoms with reference
             % dictionary
-            [~, comp_seq_vec] = basis_similarity(params.U_ref, params.U);
+            [~, comp_seq_vec] = dictionary_similarity(params.U_ref, params.U);
         else
             comp_seq_vec = [];
         end
         
-        % create_dictionary image
+        % create dictionary image
         dict_img = create_dictionary_image(params.U, comp_seq_vec, true);
         
         if plot_dict_flag && ~mod(epoch, params.plot_dict_interval)
@@ -163,13 +182,14 @@ for epoch = 1:params.num_epochs
     
     % evaluate cost_function
     if cost_flag && ~mod(epoch, params.cost_interval)
-        result.cost_vec(epoch/params.cost_interval) = cost_function(params.X, params.U, params.sparse_mode, params.sparsity_param);
+        result.cost_vec(epoch/params.cost_interval) = ...
+            cost_function(params.X, params.U, params.sparse_mode, params.sparsity_param);
     end
     
     % compute similarity between params.U_ref and params.U
     if sim_flag && ~mod(epoch, params.sim_interval)
         result.sim_mat(:, floor(epoch/params.sim_interval)+1) = ...
-            basis_similarity(params.U_ref, params.U);
+            dictionary_similarity(params.U_ref, params.U);
         
         % if stop condition is satisfied, resize result.sim_mat and
         % result.cost_vec
