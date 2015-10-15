@@ -8,7 +8,7 @@ num_dims = size(U_ref,1);
 img = create_dictionary_image(U_ref, [], true);
 
 num_samples = 1000;
-k = 12;
+k = 10;
 synth_mode = 'column_k-sparse';
 
 [X, Z] = create_synthetic_data_set(U_ref, num_samples, k, synth_mode);
@@ -18,26 +18,26 @@ U_init = solve_orth_procrustes(randn(num_dims));
 %%
 clear('params');
 
-% Choose a method...
-%
+% CHOOSE A METHOD...
+% ===============
 %   either from CONSTRAINED K-SPARSE model:
 %       {'CA', 'OSC', 'GF-OSC_cooling_learnrate', 'GF-OSC_line_search'}
 %
 %   or from UNCONSTRAINED LAGRANGIAN model:
-%       { 'DDTFC',  'lambda-OSC', 'lambda-GF-OSC_cooling_learnrate', 'lambda-GF-OSC_line_search'} 
-method = 'lambda-GF-OSC_cooling_learnrate';
+%       {'DDTFC',  'lambda-OSC', 'lambda-GF-OSC_cooling_learnrate', 'lambda-GF-OSC_line_search'} 
+method = 'GF-OSC_cooling_learnrate';
 params = default_learning_params(method);
 
 % Choose the user sparsity parameter depending on params.sparse_mode
-% params.sparsity_param = k;      % constrained model
-params.sparsity_param = .8;     % unsonstrained lagrangian model
+params.sparsity_param = k;      % constrained model
+% params.sparsity_param = 0.4;     % unsonstrained lagrangian model
 
 params.X = X;
 params.U_ref = U_ref;
 params.U_init = U_init;
 
 figure(1)
-set(gcf,'units','normalized','outerposition',[.5 .5 .5 .5])
+set(gcf, 'units', 'normalized', 'outerposition', [.5 .5 .5 .5])
 clf;
 
 subplot(2,2,1);
