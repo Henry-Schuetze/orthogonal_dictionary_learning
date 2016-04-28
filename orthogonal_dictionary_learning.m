@@ -23,7 +23,7 @@
 %
 % params.cost_interval (optional):
 %   if set, a cost function is evaluated with respect to X and U each time
-%   the epoch counter has a value which is a multiple of cost_interval
+%   the epoch counter has a value that is a multiple of cost_interval
 %
 % params.U_ref (optional):
 %   a complete orthogonal reference dictionary, required to compute
@@ -31,17 +31,18 @@
 %
 % params.sim_interval (optional, default: 1):
 %   iff U_ref is set, the similarity between U and U_ref is computed each 
-%   time the epoch counter has a value which is a multiple of cost_interval
+%   time the epoch counter has a value that is a multiple of sim_interval
 %
 % params.sim_stop_thresh (optional, default: .9999):
-%   iff U_ref is set, the iteration is stopped as soon as the smallest 
-%   overlap among all matching atom pairs from U and U_ref is above 
-%   sim_stop_thresh
+%   iff U_ref is set, the iteration is stopped as soon as the epoch counter
+%   has a value that is a multiple of sim_interval and the smallest overlap
+%   among all matching atom pairs from U and U_ref is above
+%   sim_stop_thresh.
 %
 % params.img_seq_interval (optional):
 %   if set, an image file of the current dictionary is written (assuming
 %   the atoms represent square patches) each time the epoch counter has a
-%   value which is a multiple of img_seq_interval
+%   value which is a multiple of img_seq_interval.
 %
 % params.plot_dict_interval (optional, default: false): 
 %   if set, an image of the current dictionary is shown (assuming the
@@ -90,24 +91,28 @@ end
 % prepare iterative computation of similarity between U and U_ref
 sim_flag = isfield(params, 'U_ref');
 if sim_flag
-	if ~isfield(params, 'sim_interval')
+    if ~isfield(params, 'sim_interval')
         params.sim_interval = 1;
     end
-
-    result.sim_mat = zeros(num_dims, floor(params.num_epochs/params.sim_interval)+1);
-	result.sim_mat(:,1) = dictionary_similarity(params.U_ref, params.U);
-        
+    
     if ~isfield(params, 'sim_stop_thresh')
         params.sim_stop_thresh = .9999;
     end
+
+    result.sim_mat = zeros(num_dims, floor(params.num_epochs/params.sim_interval)+1);
+	result.sim_mat(:,1) = dictionary_similarity(params.U, params.U_ref);
 end
 
 % prepare iterative creation of dictionary images
 img_seq_flag = isfield(params, 'img_seq_interval');
 if img_seq_flag
+    if ~isfield(params, 'dict_img_path')
+        params.dict_img_path = '';
+    end
+    
     dict_img = create_dictionary_image(params.U);
-    filename = sprintf('dictionary_image_epoch_%0.8d.png', 0);
-    imwrite(dict_img, filename, 'png');
+    dict_img_filename = sprintf('dictionary_image_epoch_%0.8d.png', 0);
+    imwrite(dict_img, [params.dict_img_path, dict_img_filename], 'png');
 end
 
 plot_dict_flag = isfield(params, 'plot_dict_interval');
@@ -155,28 +160,28 @@ for epoch = 1:params.num_epochs
     
     if (plot_dict_flag && ~mod(epoch, params.plot_dict_interval)) ...
             || (img_seq_flag && ~mod(epoch, params.img_seq_interval))
-        
+        % if U_ref exists
         if sim_flag
-            % get sequence to match dictionry atoms with reference
-            % dictionary
-            [~, comp_seq_vec] = dictionary_similarity(params.U_ref, params.U);
+            % call function dictionary_similarity to match the atoms of U
+            % with the atoms of U_ref for the dictionary image
+            [~, match_atoms_vec] = dictionary_similarity(params.U, params.U_ref);
         else
-            comp_seq_vec = [];
+            match_atoms_vec = [];
         end
         
         % create dictionary image
-        dict_img = create_dictionary_image(params.U, comp_seq_vec, true);
+        dict_img = create_dictionary_image(params.U, match_atoms_vec, true);
         
         if plot_dict_flag && ~mod(epoch, params.plot_dict_interval)
             imshow(dict_img);
             title(sprintf('U after epoch %08d', epoch));
-            pause(.2);
+            drawnow;
         end
         
         % write dictionary image to file system
         if img_seq_flag && ~mod(epoch, params.img_seq_interval)
-            filename = sprintf('dictionary_image_epoch_%0.8d.png', epoch);
-            imwrite(dict_img, filename, 'png');
+            dict_img_filename = sprintf('dictionary_image_epoch_%0.8d.png', epoch);
+            imwrite(dict_img, [params.dict_img_path, dict_img_filename], 'png');
         end
     end
     
@@ -186,10 +191,10 @@ for epoch = 1:params.num_epochs
             cost_function(params.X, params.U, params.sparse_mode, params.sparsity_param);
     end
     
-    % compute similarity between params.U_ref and params.U
+    % compute similarity between params.U and params.U_ref
     if sim_flag && ~mod(epoch, params.sim_interval)
         result.sim_mat(:, floor(epoch/params.sim_interval)+1) = ...
-            dictionary_similarity(params.U_ref, params.U);
+            dictionary_similarity(params.U, params.U_ref);
         
         % if stop condition is satisfied, resize result.sim_mat and
         % result.cost_vec

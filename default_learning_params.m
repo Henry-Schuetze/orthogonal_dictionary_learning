@@ -1,13 +1,14 @@
 % params = default_learning_params(method)
 %
-% Sets default parameters to learn a sparse coding dictionary by a
-% particular method. The function returns a struct which is intended to be 
-% extended (e.g. by data) and passed to orthogonal_dictionary_learning.m.
+% Sets default parameters to learn an orthogonal sparse coding dictionary 
+% by a particular method. The function returns a struct which is intended 
+% to be extended (e.g. by data), and subsequently passed to the main
+% learning function orthogonal_dictionary_learning.m.
 % 
 % INPUT:
 % ======
 % method (required):
-%   a string selecting the method
+%   a string selecting the learning method
 % 
 % OUTPUT:
 % =======
@@ -21,13 +22,13 @@
 function params = default_learning_params(method)
 
 params = struct( ...
-	'num_epochs', 1e2, ...
-    'sim_interval', 1, ...
-    'cost_interval', 1, ...
-    'plot_dict_interval', 1, ...
-    'sim_stop_thresh', 0.9999, ...
-    'method', method, ...
-    'verbose_flag', true ...
+	'num_epochs', 1e2, ...          % number of learning epochs
+    'sim_interval', 1, ...          % interval to compute similarity to reference dictionary
+    'cost_interval', 1, ...         % interval to evaluate cost function
+    'plot_dict_interval', 1, ...    % interval to visualize dictionary
+    'sim_stop_thresh', 0.9999, ...  % if similarity exceed this threshold, learning is stopped
+    'method', method, ...           % learning method
+    'verbose_flag', true ...        % to print messages during learning
 );
 
 switch method

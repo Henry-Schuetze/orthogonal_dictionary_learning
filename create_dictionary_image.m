@@ -1,50 +1,56 @@
-% dict_img = create_dictionary_image(C, seq_vec, discard_dc_flag, ...
-%   grid_line_color, scale_flag)
+% dict_img = create_dictionary_image(C, atom_seq_vec, discard_dc_flag, ...
+%   grid_line_color, normalize_patch_flag)
 %
-% Creates a image of dictionary C in which each atom is represented as a 
-% square patch arranged on a (square) grid. The number of rows of matrix C 
-% has to be a square number. From each patch its mean is subtracted, 
-% subsequently the patch is scaled to unit supremum norm and finally 
-% shifted and rescaled to match the interval [0 1].
+% Creates an image of the (not necessarily orthogonal) dictionary C of
+% which each atom (column) is visualized as a square patch arranged on a
+% (square) grid. The number of rows of matrix C (dimensionality) has to be 
+% a square number. By default, each patch is normalized for visualization,
+% i.e., its mean value is subtracted, subsequently the patch is scaled to 
+% unit supremum norm, and finally the resulting patch range [-1, 1] is 
+% mapped to the gray value interval [0, 1] (by shifting and scaling).
 %
 % INPUT:
 % ======
 % C (required):
 %   dictionary (num_dims x num_atoms)
 %
-% seq_vec (optional, default: 1:num_atoms):
-%   index sequence that defines the order of atoms in the dictionary image.
-%   seq_vec should be a permutation of 1:num_atoms. The patches will be
-%   arranged on the grid in a "column major" fashion.
+% atom_seq_vec (optional, default: 1:num_atoms):
+%   index sequence that defines the order of atom patches in the dictionary
+%   image. atom_seq_vec should be a permutation of 1:num_atoms. The patches
+%   will be arranged on the grid in a "column major" fashion.
 %
 % discard_dc_flag (optional, default: false):
-%   if true the dc component is estimated and its scaling to unit supremum 
-%   norm is prevented
+%   if true, the atom of C that is closest to the dc component is
+%   identified. The corresponding patch is only shifted by the average gray
+%   value (0.5) and not further processed. Each column of C is assumed to
+%   have unit length.
 %
 % grid_line_color (optional, default: 1):
 %   defines the color of grid lines between the patches; possible values
 %   are: 0 (black), 1 (red), 2 (green) or 3 (blue)
 % 
-% scale_flag (optional, default: true)
-%   if true patches are allowed to be normalized (see normalize_patch)
+% normalize_patch_flag (optional, default: true)
+%   if true, patches are allowed to be normalized, i.e., modified for
+%   visualization purpose (see function normalize_patch)
 %
 % OUTPUT:
 % =======
 % dict_img:
 %   image of the dictionary. Each atom is represented by a suare patch. The
-%   atom patches are ordered in column major according to seq_vec.
+%   atom patches are ordered in a "column major" fashion according to 
+%   atom_seq_vec.
 
 % Henry Schuetze 
 % Institute for Neuro- and Bioinformatics
 % University of Luebeck, Germany
 % Henry.Schuetze@uni-luebeck.de
-function dict_img = create_dictionary_image(C, seq_vec, ...
-    discard_dc_flag, grid_line_color, scale_flag)
+function dict_img = create_dictionary_image(C, atom_seq_vec, ...
+    discard_dc_flag, grid_line_color, normalize_patch_flag)
 
 [num_dims, num_atoms] = size(C);
 
-if nargin < 2 || isempty(seq_vec)
-    seq_vec = 1:num_atoms;
+if nargin < 2 || isempty(atom_seq_vec)
+    atom_seq_vec = 1:num_atoms;
 end
 
 if nargin < 3 || ~islogical(discard_dc_flag)
@@ -56,13 +62,13 @@ if nargin < 4
 end
 
 if nargin < 5
-    scale_flag = true;
+    normalize_patch_flag = true;
 end
 
 if discard_dc_flag
     % estimate which atom is most similar to dc component
     dc_vec = (1/sqrt(num_dims))*ones(num_dims, 1);
-    [~, dc_idx] = max(abs(C(:,seq_vec)' * dc_vec));
+    [~, dc_idx] = max(abs(C(:,atom_seq_vec)' * dc_vec));
     [dc_x, dc_y] = ind2sub(ceil(sqrt(num_atoms))*[1, 1], dc_idx);
 end
 
@@ -88,15 +94,15 @@ for atom_idx = 1:ceil(sqrt(num_atoms))^2
 
     [x, y] = ind2sub(ceil(sqrt(num_atoms))*[1, 1], atom_idx);
     
-    if atom_idx <= length(seq_vec)
-        atom = C(:, seq_vec(atom_idx));
+    if atom_idx <= length(atom_seq_vec)
+        atom = C(:, atom_seq_vec(atom_idx));
 
+        patch = reshape(atom, sqrt(num_dims), sqrt(num_dims));
         if discard_dc_flag && (x==dc_x) && (y==dc_y)
             % shift dc component by mean gray value
-            patch = reshape(atom, sqrt(num_dims), sqrt(num_dims)) + 0.5;
+            patch = patch + 0.5;
         else
-            patch = reshape(atom, sqrt(num_dims), sqrt(num_dims));
-            if scale_flag
+            if normalize_patch_flag
                 patch = normalize_patch(patch);
             end
         end

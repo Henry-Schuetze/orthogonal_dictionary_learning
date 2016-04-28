@@ -2,8 +2,9 @@
 %
 % Performs an orthogonal dictionary update according to the OSC algorithm.
 %
-% [1] Schütze, H., Barth, E., and Martinetz, T. "Learning Efficient Data 
-% Representations with Orthogonal Sparse Coding", submitted 2014
+% [1] Schütze, H., Barth, E., and Martinetz, T. (2016), "Learning Efficient 
+% Data Representations with Orthogonal Sparse Coding", IEEE Transactions on 
+% Computational Imaging
 %
 % INPUT: params
 % ======

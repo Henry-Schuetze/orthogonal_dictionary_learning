@@ -2,8 +2,9 @@
 %
 % Solves the orthogonal procrustes problem, a matrix approximation problem
 % which asks for the orthogonal matrix U which is nearest to a given matrix
-% M in terms of Frobenius metric. Assuming M = A'B, it can be equivalently 
-% formulated as follows:  U = arg min_W ||WA - B||_F subject to W'W = I.
+% M in terms of the Frobenius metric. If M = A'B, then the problem can be 
+% equivalently formulated as follows:  U = arg min_W ||WA - B||_F subject 
+% to W'W = I.
 %
 % [1] Schonemann, P.H. (1966), "A generalized solution of the orthogonal 
 % Procrustes problem", Psychometrika 31: 1–10
@@ -13,13 +14,13 @@
 % INPUT:
 % ======
 % M (required):
-%   a given matrix
+%   a matrix whose number of columns does not exceed it number of rows
 %
 % OUTPUT:
 % =======
 % U:
-%   matrix of same size as M with orthogonal columns which is closest to M
-%   in terms of Frobenius metric
+%   matrix with same size as M and mutually orthogonal columns.
+%   Furthermore, U is closest to M in terms of the Frobenius metric
 
 % Henry Schuetze 
 % Institute for Neuro- and Bioinformatics
@@ -27,8 +28,8 @@
 % Henry.Schuetze@uni-luebeck.de
 function U = solve_orth_procrustes(M)
 
-[num_dims, num_atoms] = size(M);
-assert(num_atoms <= num_dims);
+[num_rows, num_columns] = size(M);
+assert(num_columns <= num_rows);
 
 [Q, S, R] = svd(M);
 

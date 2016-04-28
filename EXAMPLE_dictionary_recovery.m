@@ -8,11 +8,12 @@ num_dims = size(U_ref,1);
 img = create_dictionary_image(U_ref, [], true);
 
 num_samples = 1000;
-k = 10;
-synth_mode = 'column_k-sparse';
+sparsity_param = 10;
+synthetic_mode = 'column_k-sparse';
 
-[X, Z] = create_synthetic_data_set(U_ref, num_samples, k, synth_mode);
+[X, Z] = create_synthetic_data_set(U_ref, num_samples, sparsity_param, synthetic_mode);
 
+% create an initial random basis
 U_init = solve_orth_procrustes(randn(num_dims));
 
 %%
@@ -24,17 +25,25 @@ clear('params');
 %       {'CA', 'OSC', 'GF-OSC_cooling_learnrate', 'GF-OSC_line_search'}
 %
 %   or from UNCONSTRAINED LAGRANGIAN model:
-%       {'DDTFC',  'lambda-OSC', 'lambda-GF-OSC_cooling_learnrate', 'lambda-GF-OSC_line_search'} 
+%       {'DDTFC',  'lambda-OSC', 'lambda-GF-OSC_cooling_learnrate',
+%       'lambda-GF-OSC_line_search'} 
+
 method = 'GF-OSC_cooling_learnrate';
 params = default_learning_params(method);
 
-% Choose the user sparsity parameter depending on params.sparse_mode
-params.sparsity_param = k;      % constrained model
-% params.sparsity_param = 0.4;     % unsonstrained lagrangian model
+% <IMPORTANT>: Choose sparsity parameter depending on params.sparse_mode
+params.sparsity_param = sparsity_param;       % constrained model: expected number of non-zero coefficients per sample
+% params.sparsity_param = 0.4;                    % unsonstrained model: hard threshold
 
 params.X = X;
 params.U_ref = U_ref;
 params.U_init = U_init;
+
+% uncomment the following lines if you wish to iteratively create image
+% files of the dictionary 
+%
+% params.img_seq_interval = 1;
+% params.dict_img_path = '/home/some/path/'; % let the string end with '/'
 
 figure(1)
 set(gcf, 'units', 'normalized', 'outerposition', [.5 .5 .5 .5])

@@ -1,8 +1,13 @@
 % cost_val = cost_function(X, U, sparse_mode, sparsity_param)
 %
 % Evaluates the cost function for orthogonal sparse coding. The sparse
-% coefficients are estimated by the function sparse_coefficients(X, U,
-% sparse_mode, sparsity_param).
+% coefficient matrix A is computed by the function sparse_coefficients(X,
+% U, sparse_mode, sparsity_param). If sparse_mode == 'column_k-sparse' then
+% the cost function ||X - U*A||²_F is evaluated. If sparse_mode ==
+% 'hard_thresh' then the cost function ||X - U*A||²_F + lambda*||A||_0 is
+% evaluated (where each entry of A with absolute value less than 1e-4 is 
+% considered to be zero).
+
 %
 % INPUT:
 % ======
@@ -17,9 +22,10 @@
 %   the sparse model
 %
 % sparsity_param (required):
-%   sparsity parameter corresponding to the sparse model, i.e., either the 
-%   number of non-zero coefficients (if sparse_mode == 'column_k-sparse') 
-%   or the hard threshold (if sparse_mode == 'hard_thresh')
+%   sparsity parameter corresponding to the sparse model, i.e., either k,
+%   the number of non-zero coefficients (if sparse_mode == 
+%   'column_k-sparse') or lambda, the hard threshold (if sparse_mode == 
+%   'hard_thresh').
 %
 % OUTPUT:
 % =======
@@ -32,7 +38,7 @@
 % Henry.Schuetze@uni-luebeck.de
 function cost_val = cost_function(X, U, sparse_mode, sparsity_param)
 
-% compute the sparse coefficient matrix A of data matrix X with respect to
+% compute the sparse coefficient matrix A for data matrix X with respect to
 % dictionary U
 A = sparse_coefficients(X, U, sparse_mode, sparsity_param);
 
