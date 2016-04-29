@@ -1,9 +1,9 @@
 % [sim_vec, match_atoms_vec] = dictionary_similarity(C, C_ref)
 %
-% Computes the overlaps between "matching" columns of matrix C and matrix 
-% C_ref. The matching is assigned based on 1st, 2nd , 3rd, ... largest
-% overlap. The assignment is a bijective mapping. The columns of C and
-% C_ref should all have unit length.
+% Computes the overlaps between "matching columns" of matrix C and matrix 
+% C_ref. The matching is assigned as a bijective mapping based on 1st, 2nd,
+% 3rd, ... largest overlap. The columns of C and C_ref should all have unit
+% length.
 %
 % INPUT:
 % ======
@@ -16,9 +16,11 @@
 % OUTPUT:
 % =======
 % sim_vec:
-%   vector (1 x num_atoms) containing the overlaps of matched atom pairs
+%   similarity vector (num_atoms x 1) containing the overlaps of matched
+%   atom pairs
 %
 % match_atoms_vec:
+%   row vector that matches the columns of matrix C to those of C_ref.
 %   defines column permutation of matrix C such that a column
 %   C(:, match_atoms_vec(col_idx)) matches with column C_ref(:, col_idx)
 %
@@ -29,13 +31,15 @@
 % Henry.Schuetze@uni-luebeck.de
 function [sim_vec, match_atoms_vec] = dictionary_similarity(C, C_ref)
 
-num_dims = size(C, 1);
+assert(isequal(size(C), size(C_ref)), 'C and C_ref do not have equal size')
+
+num_atoms = size(C, 2);
 G = abs(C_ref'*C);
 
-match_atoms_vec = zeros(1, num_dims);
-sim_vec = zeros(1, num_dims);
+match_atoms_vec = zeros(1, num_atoms);
+sim_vec = zeros(num_atoms, 1);
 
-for h = 1:num_dims
+for h = 1:num_atoms
     [~, idx] = max(G(:));
     [i,j] = ind2sub(size(G), idx);
     

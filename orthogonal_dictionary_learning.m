@@ -26,7 +26,7 @@
 %   the epoch counter has a value that is a multiple of cost_interval
 %
 % params.U_ref (optional):
-%   a complete orthogonal reference dictionary, required to compute
+%   a complete orthogonal reference dictionary, required to compute the
 %   similarity between iterating dictionary and a ground-truth dictionary
 %
 % params.sim_interval (optional, default: 1):
@@ -36,18 +36,20 @@
 % params.sim_stop_thresh (optional, default: .9999):
 %   iff U_ref is set, the iteration is stopped as soon as the epoch counter
 %   has a value that is a multiple of sim_interval and the smallest overlap
-%   among all matching atom pairs from U and U_ref is above
+%   among all matching pairs of atoms from U and U_ref is above
 %   sim_stop_thresh.
 %
 % params.img_seq_interval (optional):
 %   if set, an image file of the current dictionary is written (assuming
 %   the atoms represent square patches) each time the epoch counter has a
-%   value which is a multiple of img_seq_interval.
+%   value that is a multiple of img_seq_interval. A path can be supplied
+%   via the string params.dict_img_path, otherwise the images are stored
+%   into the current path
 %
 % params.plot_dict_interval (optional, default: false): 
 %   if set, an image of the current dictionary is shown (assuming the
 %   atoms represent square patches) each time the epoch counter has a value
-%   which is a multiple of plot_dict_interval
+%   that is a multiple of plot_dict_interval.
 %
 % params.verbose_flag (optional, default: true)
 %   if set, output messages are printed during iterations
@@ -77,10 +79,13 @@ result = struct('U', []);
 if isfield(params, 'U_init')
     % load initial dictionary if supplied
     params.U = params.U_init;
+    assert(size(params.U, 1) == num_dims);
 else
     % randomly create initial orthogonal dictionary
     params.U = solve_orth_procrustes(randn(num_dims));
 end
+
+num_atoms = size(params.U, 2);
 
 % prepare iterative computation of cost function
 cost_flag = isfield(params, 'cost_interval');
@@ -99,11 +104,11 @@ if sim_flag
         params.sim_stop_thresh = .9999;
     end
 
-    result.sim_mat = zeros(num_dims, floor(params.num_epochs/params.sim_interval)+1);
+    result.sim_mat = zeros(num_atoms, floor(params.num_epochs/params.sim_interval)+1);
 	result.sim_mat(:,1) = dictionary_similarity(params.U, params.U_ref);
 end
 
-% prepare iterative creation of dictionary images
+% prepare iterative creation of dictionary image files
 img_seq_flag = isfield(params, 'img_seq_interval');
 if img_seq_flag
     if ~isfield(params, 'dict_img_path')
