@@ -40,6 +40,7 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   
   double* U = mxGetPr(mxGetField(plhs[0], 0, "U"));
   double* x_res = mxGetPr(mxGetField(plhs[0], 0, "x"));
+  int K = (int)*mxGetPr(mxGetField(plhs[0], 0, "sparsity_param"));
   
   double t = *mxGetPr(mxGetField(plhs[0], 0, "t"));
   double t_max = *mxGetPr(mxGetField(plhs[0], 0, "t_max"));
@@ -80,15 +81,17 @@ void mexFunction(int nlhs, mxArray *plhs[], int nrhs, const mxArray *prhs[])
   
   for(k=0; k < dim_vec[1]; k++) {
     kk_end = a[k].first + dim_vec[0];
-
-    // compute y (inner product of x_res and u_k)
-    tmp = 0;
-    for(kk=a[k].first, j=0; kk < kk_end; kk++, j++)
-      tmp += U[kk]*x_res[j];
     
-    // Hebbian-like update
-    for(kk=a[k].first, j=0; kk < kk_end; kk++, j++)
-      U[kk] += eps_t * tmp * x_res[j];
+    if(k < K) {
+      // compute y (inner product of x_res and u_k)
+      tmp = 0;
+      for(kk=a[k].first, j=0; kk < kk_end; kk++, j++)
+        tmp += U[kk]*x_res[j];
+      
+      // Hebbian-like update
+      for(kk=a[k].first, j=0; kk < kk_end; kk++, j++)
+        U[kk] += eps_t * tmp * x_res[j];
+    }
     
     // compute simultaneously the norm of u_k and the inner product of x_res and u_k
     tmp = 0;

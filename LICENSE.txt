@@ -19,12 +19,14 @@ update_GFOSC_cooling_learnrate.m
 update_GFOSC_line_search.m
 update_lambdaOSC_fast.cpp
 update_lambdaOSC_fast.mexa64
+update_lambdaOSC_fast.m
 update_orth_procrustes.m
 update_OSC_fast.cpp
 update_OSC_fast.mexa64
+update_OSC_fast.m
 update_OSC.m
 
-each is licensed according to the MIT License (MIT)
+each is licensed according to the MIT License
 (https://opensource.org/licenses/MIT)
 
 Copyright © 2016 Henry Schuetze

@@ -1,6 +1,8 @@
-% params = update_OSC_fast(params)
+% params = update_lambdaOSC_fast(params)
 %
-% Performs an orthogonal dictionary update according to the OSC algorithm.
+% Performs an orthogonal dictionary update similiar to the OSC algorithm.
+% This function implements a naive straight-forward extension of OSC to
+% meet the unconstrained Lagrangian model.
 %
 % [1] Schütze, H., Barth, E., and Martinetz, T., "Learning Efficient Data
 % Representations with Orthogonal Sparse Coding", IEEE Transactions on 
@@ -28,7 +30,7 @@
 %   maximal number of learning steps
 %
 % params.sparsity_param (required):
-%   the number of non-zero coefficients (independent of params.sparse_mode)
+%   the hard threshold (independent of params.sparse_mode)
 %
 % OUTPUT: params
 % =======

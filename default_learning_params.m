@@ -73,7 +73,8 @@ switch method
         params.sparse_mode = 'column_k-sparse';
         params.eps_i = 1e-1;
         params.eps_f = 1e-3;
-        % use update_OSC_fast(params) instead of update_OSC(params)
+        % prefer update_OSC_fast(params) to update_OSC(params) (unless you
+        % have problems to use and compile update_OSC_fast.mexa64)
         % params.update = @(params) update_OSC(params);
         params.update = @(params) update_OSC_fast(params);
         
@@ -82,6 +83,10 @@ switch method
         params.sparse_mode = 'hard_thresh';
         params.eps_i = 1e-1;
         params.eps_f = 1e-3;
+        % prefer update_lambdaOSC_fast(params) to update_OSC(params)
+        % (unless you have problems to use and compile
+        % update_lambdaOSC_fast.mexa64)
+        % params.update = @(params) update_OSC(params);
         params.update = @(params) update_lambdaOSC_fast(params);
 
     case 'GF-OSC_cooling_learnrate'

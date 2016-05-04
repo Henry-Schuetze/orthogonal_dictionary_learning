@@ -52,7 +52,7 @@ For a quick start have a look at:
   -->   EXAMPLE_natural_image_patches
         (learns an orthogonal dictionary from patches of an image)
 
-If you have trouble to use the pre-compiled mex files
+If you have trouble to use the pre-compiled mex files:
  - crop_patches_of_img.mexa64
  - update_lambdaOSC_fast.mexa64
  - update_OSC_fast.mexa64

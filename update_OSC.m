@@ -1,8 +1,11 @@
 % params = update_OSC(params)
 %
 % Performs an orthogonal dictionary update according to the OSC algorithm.
-% Instead of using this function consider to use update_OSC_fast.mexa64,
-% which provides improved runtime performance.
+% This function also implements a naive straight-forward extension to meet
+% the unconstrained Lagrangian model.
+%
+% Consider to use update_OSC_fast.mexa64 or update_lambdaOSC_fast.mexa64 
+% instead of update_OSC.m for improved runtime performance.
 %
 % [1] Schütze, H., Barth, E., and Martinetz, T., "Learning Efficient Data
 % Representations with Orthogonal Sparse Coding", IEEE Transactions on 
@@ -69,18 +72,19 @@
 % USE OR OTHER DEALINGS IN THE SOFTWARE.
 function params = update_OSC(params)
 
-[~, seq_vec] = sparse_coefficients(params.x, params.U, ...
+[a, seq_vec] = sparse_coefficients(params.x, params.U, ...
     params.sparse_mode, params.sparsity_param);
 eps_t = params.eps_i * (params.eps_f/params.eps_i)^(params.t/params.t_max);
 
 for k = 1 : size(params.U,2)
     for l = 1 : (k-1)
-        % orthogonalize atom u_k subject to update u_1,...,u_(k-1)
+        % orthogonalize atom u_k subject to updated u_1,...,u_(k-1)
         params.U(:, seq_vec(k)) = params.U(:, seq_vec(k)) - ...
             (params.U(:, seq_vec(k))'*params.U(:, seq_vec(l))) * params.U(:,seq_vec(l));
     end
     
-    if k <= params.sparsity_param
+    if (strcmp(params.sparse_mode, 'column_k-sparse') && k <= params.sparsity_param) || ...
+            (strcmp(params.sparse_mode, 'hard_thresh') && abs(a(seq_vec(k))) > params.sparsity_param)
         % Hebbian-like main update
         params.U(:, seq_vec(k)) = params.U(:, seq_vec(k)) + ...
             eps_t * (params.U(:, seq_vec(k))'* params.x) * params.x;

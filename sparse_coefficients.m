@@ -59,6 +59,7 @@ num_samples = size(X, 2);
 dict_size = size(U, 2);
 
 A = U'*X;
+[~, I_sorted] = sort(abs(A), 'descend');
 
 switch sparse_mode
     case 'column_k-sparse'
@@ -67,8 +68,6 @@ switch sparse_mode
                 '''column_k-sparse'' the variable sparsity_param is ', ...
                 'expected to have an integer value.']);
         end
-        
-        [~, I_sorted] = sort(abs(A), 'descend');
         
         if num_samples > 1
             % X is a matrix
