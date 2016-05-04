@@ -18,16 +18,22 @@
 % params.num_epochs (required):
 %   number of full batch iterations
 %
+% params.rand_seed (optional, default: 0):
+%   a seed for the random number generator such that the randomly generated
+%   initial dictionary and the sequence of training data samples for online
+%   methods are deterministic
+%
 % params.U_init (optional):
-%   initial complete orthogonal dictionary
+%   initial orthogonal dictionary. Provide params.U_init with less columns
+%   than rows in order to learn an undercomplete dictionary
 %
 % params.cost_interval (optional):
 %   if set, a cost function is evaluated with respect to X and U each time
 %   the epoch counter has a value that is a multiple of cost_interval
 %
 % params.U_ref (optional):
-%   a complete orthogonal reference dictionary, required to compute the
-%   similarity between iterating dictionary and a ground-truth dictionary
+%   an orthogonal reference dictionary, required to compute the similarity
+%   between iterating dictionary and a ground-truth dictionary
 %
 % params.sim_interval (optional, default: 1):
 %   iff U_ref is set, the similarity between U and U_ref is computed each 
@@ -39,14 +45,14 @@
 %   among all matching pairs of atoms from U and U_ref is above
 %   sim_stop_thresh.
 %
-% params.img_seq_interval (optional):
+% params.write_dict_img_interval (optional):
 %   if set, an image file of the current dictionary is written (assuming
 %   the atoms represent square patches) each time the epoch counter has a
-%   value that is a multiple of img_seq_interval. A path can be supplied
-%   via the string params.dict_img_path, otherwise the images are stored
-%   into the current path
+%   value that is a multiple of write_dict_img_interval. A path can be
+%   supplied via the string params.dict_img_path, otherwise the images are
+%   stored into the current path
 %
-% params.plot_dict_interval (optional, default: false): 
+% params.show_dict_img_interval (optional, default: false): 
 %   if set, an image of the current dictionary is shown (assuming the
 %   atoms represent square patches) each time the epoch counter has a value
 %   that is a multiple of plot_dict_interval.
@@ -57,7 +63,7 @@
 % OUTPUT: result
 % =======
 % result.U:
-%   final complete orthogonal dictionary
+%   final orthogonal dictionary
 %
 % result.cost_vec:
 %   cost_function values for every params.cost_interval epoch
@@ -66,31 +72,51 @@
 %   matrix that columnwise contains the overlaps of matching atoms from U
 %   and U_ref
 
-% Henry Schuetze 
+% Copyright © 2016 Henry Schuetze
 % Institute for Neuro- and Bioinformatics
 % University of Luebeck, Germany
 % Henry.Schuetze@uni-luebeck.de
+% 
+% Permission is hereby granted, free of charge, to any person obtaining a 
+% copy of this software and associated documentation files (the
+% "Software"), to deal in the Software without restriction, including 
+% without limitation the rights to use, copy, modify, merge, publish, 
+% distribute, sublicense, and/or sell copies of the Software, and to permit
+% persons to whom the Software is furnished to do so, subject to the
+% following conditions:
+% 
+% The above copyright notice and this permission notice shall be included 
+% in all copies or substantial portions of the Software.
+% 
+% THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
+% OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF 
+% MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+% NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
+% DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
+% OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+% USE OR OTHER DEALINGS IN THE SOFTWARE.
 function result = orthogonal_dictionary_learning(params)
 
-result = struct('U', []);
+if ~isfield(params, 'rand_seed')
+    params.rand_seed = 0;
+end
+% set seed of the random number generator
+rng(params.rand_seed, 'twister');
 
 [num_dims, num_samples] = size(params.X);
 
-if isfield(params, 'U_init')
-    % load initial dictionary if supplied
-    params.U = params.U_init;
-    assert(size(params.U, 1) == num_dims);
-else
+if ~isfield(params, 'U_init')
     % randomly create initial orthogonal dictionary
-    params.U = solve_orth_procrustes(randn(num_dims));
+    params.U_init = solve_orth_procrustes(randn(num_dims));
 end
+params.U = params.U_init;
 
 num_atoms = size(params.U, 2);
 
 % prepare iterative computation of cost function
 cost_flag = isfield(params, 'cost_interval');
 if cost_flag
-    result.cost_vec = zeros(1, floor(params.num_epochs/params.sim_interval));
+    params.cost_vec = zeros(1, floor(params.num_epochs/params.sim_interval));
 end
 
 % prepare iterative computation of similarity between U and U_ref
@@ -104,13 +130,13 @@ if sim_flag
         params.sim_stop_thresh = .9999;
     end
 
-    result.sim_mat = zeros(num_atoms, floor(params.num_epochs/params.sim_interval)+1);
-	result.sim_mat(:,1) = dictionary_similarity(params.U, params.U_ref);
+    params.sim_mat = zeros(num_atoms, floor(params.num_epochs/params.sim_interval)+1);
+	params.sim_mat(:,1) = dictionary_similarity(params.U, params.U_ref);
 end
 
 % prepare iterative creation of dictionary image files
-img_seq_flag = isfield(params, 'img_seq_interval');
-if img_seq_flag
+write_dict_img_flag = isfield(params, 'write_dict_img_interval');
+if write_dict_img_flag
     if ~isfield(params, 'dict_img_path')
         params.dict_img_path = '';
     end
@@ -120,7 +146,7 @@ if img_seq_flag
     imwrite(dict_img, [params.dict_img_path, dict_img_filename], 'png');
 end
 
-plot_dict_flag = isfield(params, 'plot_dict_interval');
+show_dict_img_flag = isfield(params, 'show_dict_img_interval');
 
 % set verbose_flag
 if ~isfield(params, 'verbose_flag')
@@ -136,14 +162,6 @@ if strcmp(params.learn_type, 'online')
     % learning rate
     params.t = 0;
     params.t_max = params.num_epochs * num_samples;
-    
-    % set seed of the random number generator, e.g., to obtain a
-    % deterministic random sequence of data samples
-    if isfield(params, 'rand_seed')
-        rng(params.rand_seed, 'twister');
-    else
-        rng(0, 'twister');
-    end
 end
 
 for epoch = 1:params.num_epochs
@@ -163,8 +181,8 @@ for epoch = 1:params.num_epochs
             error('unknown params.learn_type');
     end
     
-    if (plot_dict_flag && ~mod(epoch, params.plot_dict_interval)) ...
-            || (img_seq_flag && ~mod(epoch, params.img_seq_interval))
+    if (show_dict_img_flag && ~mod(epoch, params.show_dict_img_interval)) ...
+            || (write_dict_img_flag && ~mod(epoch, params.write_dict_img_interval))
         % if U_ref exists
         if sim_flag
             % call function dictionary_similarity to match the atoms of U
@@ -177,14 +195,15 @@ for epoch = 1:params.num_epochs
         % create dictionary image
         dict_img = create_dictionary_image(params.U, match_atoms_vec, true);
         
-        if plot_dict_flag && ~mod(epoch, params.plot_dict_interval)
+        if show_dict_img_flag && ~mod(epoch, params.show_dict_img_interval)
+            % show dictionary image
             imshow(dict_img);
             title(sprintf('U after epoch %08d', epoch));
             drawnow;
         end
         
-        % write dictionary image to file system
-        if img_seq_flag && ~mod(epoch, params.img_seq_interval)
+        if write_dict_img_flag && ~mod(epoch, params.write_dict_img_interval)
+            % write dictionary image to file system
             dict_img_filename = sprintf('dictionary_image_epoch_%0.8d.png', epoch);
             imwrite(dict_img, [params.dict_img_path, dict_img_filename], 'png');
         end
@@ -192,21 +211,21 @@ for epoch = 1:params.num_epochs
     
     % evaluate cost_function
     if cost_flag && ~mod(epoch, params.cost_interval)
-        result.cost_vec(epoch/params.cost_interval) = ...
+        params.cost_vec(epoch/params.cost_interval) = ...
             cost_function(params.X, params.U, params.sparse_mode, params.sparsity_param);
     end
     
     % compute similarity between params.U and params.U_ref
     if sim_flag && ~mod(epoch, params.sim_interval)
-        result.sim_mat(:, floor(epoch/params.sim_interval)+1) = ...
+        params.sim_mat(:, floor(epoch/params.sim_interval)+1) = ...
             dictionary_similarity(params.U, params.U_ref);
         
-        % if stop condition is satisfied, resize result.sim_mat and
-        % result.cost_vec
-        if min(result.sim_mat(:, floor(epoch/params.sim_interval)+1)) >= params.sim_stop_thresh
-            result.sim_mat = result.sim_mat(:, 1:(floor(epoch/params.sim_interval)+1));
+        % if similarity stop condition is satisfied, resize params.sim_mat
+        % and params.cost_vec
+        if min(params.sim_mat(:, floor(epoch/params.sim_interval)+1)) >= params.sim_stop_thresh
+            params.sim_mat = params.sim_mat(:, 1:(floor(epoch/params.sim_interval)+1));
             if cost_flag
-                result.cost_vec = result.cost_vec(1:(floor(epoch/params.cost_interval)));
+                params.cost_vec = params.cost_vec(1:(floor(epoch/params.cost_interval)));
             end
             
             if verbose_flag
@@ -221,8 +240,24 @@ for epoch = 1:params.num_epochs
     end
 end
 
-result.U = params.U;
 if ~isfield(params, 'A')
     params.A = sparse_coefficients(params.X, params.U, params.sparse_mode, params.sparsity_param);
 end
-result.A = params.A;
+
+result = params;
+
+if isfield(result, 'show_dict_img_interval')
+    result = rmfield(result, 'show_dict_img_interval');
+end
+if isfield(result, 'verbose_flag')
+    result = rmfield(result, 'verbose_flag');
+end
+if isfield(result, 'x')
+    result = rmfield(result, 'x');
+end
+if isfield(result, 't')
+    result = rmfield(result, 't');
+end
+if isfield(result, 't_max')
+    result = rmfield(result, 't_max');
+end

@@ -1,10 +1,12 @@
 % params = update_OSC(params)
 %
 % Performs an orthogonal dictionary update according to the OSC algorithm.
+% Instead of using this function consider to use update_OSC_fast.mexa64,
+% which provides improved runtime performance.
 %
-% [1] Schütze, H., Barth, E., and Martinetz, T. (2016), "Learning Efficient 
-% Data Representations with Orthogonal Sparse Coding", IEEE Transactions on 
-% Computational Imaging
+% [1] Schütze, H., Barth, E., and Martinetz, T., "Learning Efficient Data
+% Representations with Orthogonal Sparse Coding", IEEE Transactions on 
+% Computational Imaging, 2016 (accepted)
 %
 % INPUT: params
 % ======
@@ -42,10 +44,29 @@
 % params.U:
 %   updated dictionary
 
-% Henry Schuetze 
+% Copyright © 2016 Henry Schuetze
 % Institute for Neuro- and Bioinformatics
 % University of Luebeck, Germany
 % Henry.Schuetze@uni-luebeck.de
+% 
+% Permission is hereby granted, free of charge, to any person obtaining a 
+% copy of this software and associated documentation files (the
+% "Software"), to deal in the Software without restriction, including 
+% without limitation the rights to use, copy, modify, merge, publish, 
+% distribute, sublicense, and/or sell copies of the Software, and to permit
+% persons to whom the Software is furnished to do so, subject to the
+% following conditions:
+% 
+% The above copyright notice and this permission notice shall be included 
+% in all copies or substantial portions of the Software.
+% 
+% THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
+% OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF 
+% MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+% NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
+% DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
+% OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+% USE OR OTHER DEALINGS IN THE SOFTWARE.
 function params = update_OSC(params)
 
 [~, seq_vec] = sparse_coefficients(params.x, params.U, ...
@@ -61,7 +82,8 @@ for k = 1 : size(params.U,2)
     
     if k <= params.sparsity_param
         % Hebbian-like main update
-        params.U(:, seq_vec(k)) = params.U(:, seq_vec(k)) + eps_t * (params.U(:, seq_vec(k))'* params.x) * params.x;
+        params.U(:, seq_vec(k)) = params.U(:, seq_vec(k)) + ...
+            eps_t * (params.U(:, seq_vec(k))'* params.x) * params.x;
     end
     
     % normalize atom u_k

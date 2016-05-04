@@ -30,10 +30,29 @@
 %   descending order (caution: only set when sparse_mode == 
 %   'column_k-sparse')
 
-% Henry Schuetze 
+% Copyright © 2016 Henry Schuetze
 % Institute for Neuro- and Bioinformatics
 % University of Luebeck, Germany
 % Henry.Schuetze@uni-luebeck.de
+% 
+% Permission is hereby granted, free of charge, to any person obtaining a 
+% copy of this software and associated documentation files (the
+% "Software"), to deal in the Software without restriction, including 
+% without limitation the rights to use, copy, modify, merge, publish, 
+% distribute, sublicense, and/or sell copies of the Software, and to permit
+% persons to whom the Software is furnished to do so, subject to the
+% following conditions:
+% 
+% The above copyright notice and this permission notice shall be included 
+% in all copies or substantial portions of the Software.
+% 
+% THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
+% OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF 
+% MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+% NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
+% DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
+% OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+% USE OR OTHER DEALINGS IN THE SOFTWARE.
 function [A, I_sorted] = sparse_coefficients(X, U, sparse_mode, sparsity_param)
 
 num_samples = size(X, 2);
@@ -43,6 +62,12 @@ A = U'*X;
 
 switch sparse_mode
     case 'column_k-sparse'
+        if ~isequal(sparsity_param, round(sparsity_param))
+            error(['Since variable sparse_mode is set to ', ...
+                '''column_k-sparse'' the variable sparsity_param is ', ...
+                'expected to have an integer value.']);
+        end
+        
         [~, I_sorted] = sort(abs(A), 'descend');
         
         if num_samples > 1

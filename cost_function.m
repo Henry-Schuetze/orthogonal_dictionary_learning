@@ -7,7 +7,6 @@
 % 'hard_thresh' then the cost function ||X - U*A||²_F + lambda*||A||_0 is
 % evaluated (where each entry of A with absolute value less than 1e-4 is 
 % considered to be zero).
-
 %
 % INPUT:
 % ======
@@ -32,10 +31,29 @@
 % cost_val
 %   the cost function value
 
-% Henry Schuetze 
+% Copyright © 2016 Henry Schuetze
 % Institute for Neuro- and Bioinformatics
 % University of Luebeck, Germany
 % Henry.Schuetze@uni-luebeck.de
+% 
+% Permission is hereby granted, free of charge, to any person obtaining a 
+% copy of this software and associated documentation files (the
+% "Software"), to deal in the Software without restriction, including 
+% without limitation the rights to use, copy, modify, merge, publish, 
+% distribute, sublicense, and/or sell copies of the Software, and to permit
+% persons to whom the Software is furnished to do so, subject to the
+% following conditions:
+% 
+% The above copyright notice and this permission notice shall be included 
+% in all copies or substantial portions of the Software.
+% 
+% THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS 
+% OR IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF 
+% MERCHANTABILITY, FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN
+% NO EVENT SHALL THE AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, 
+% DAMAGES OR OTHER LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR 
+% OTHERWISE, ARISING FROM, OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE
+% USE OR OTHER DEALINGS IN THE SOFTWARE.
 function cost_val = cost_function(X, U, sparse_mode, sparsity_param)
 
 % compute the sparse coefficient matrix A for data matrix X with respect to
