@@ -18,15 +18,16 @@ the coefficient matrix.
   min_{U, A: U'U=I} ||X - UA||²_F + lambda*||A||_0
 
 The key function, orthogonal_dictionary_learning.m, handles the iteration
-of learning epochs. The dictionary update depends on the selected method
-and is realized by a function handle which is a field of the parameter
-struct passed to the function. This function handle is set by the function
-default_learning_params.m. orthogonal_dictionary_learning.m is designed to
-optionally perform additional computations such as to evaluate the cost
-function of the sparse coding model, to calculate the similarity of the
-current dictionary with a reference dictionary, to visualize the current
-dictionary, or to save the current dictionary as an image file (assuming
-that dictionary atoms can be represented as patches).
+of learning epochs. How the dictionary is updated depends on the selected
+method, and is realized by the function handle "update()" which is a field
+of the parameter struct passed to the function. This function handle is set
+by the function default_learning_params.m. The function 
+orthogonal_dictionary_learning.m is designed to optionally perform
+additional computations such as to evaluate the cost function of the sparse
+coding model, to calculate the similarity of the current dictionary with a
+reference dictionary, to visualize the current dictionary, or to save the
+current dictionary as an image file (assuming that dictionary atoms can be
+represented as patches).
 
 The supported set of methods
 
@@ -41,8 +42,8 @@ The supported set of methods
 
 Remember that, depending on the model, params.sparsity_param represents
 either the maximal number of non-zero entries per column of A (model (1)),
-or the hard threshold such that each entry of A with absolute value below
-is set to zero (model (2)).
+or the hard threshold such that each entry of A with an absolute value
+smaller than the threshold is set to zero (model (2)).
 
 For a quick start have a look at:
 

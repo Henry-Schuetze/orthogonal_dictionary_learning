@@ -52,12 +52,12 @@ clear('params');
 %   or from UNCONSTRAINED LAGRANGIAN model:
 %       {'DDTFC',  'lambda-OSC', 'lambda-GF-OSC_cooling_learnrate',
 %       'lambda-GF-OSC_line_search'} 
-method = 'lambda-OSC';
+method = 'GF-OSC_cooling_learnrate';
 params = default_learning_params(method);
 
 % ==> !IMPORTANT! <==: Choose sparsity parameter depending on params.sparse_mode
-% params.sparsity_param = sparsity_param;       % constrained model: expected number of non-zero coefficients per sample
-params.sparsity_param = .4;                  % unsonstrained model: hard threshold
+params.sparsity_param = sparsity_param;       % constrained model: expected number of non-zero coefficients per sample
+% params.sparsity_param = .4;                  % unsonstrained model: hard threshold
 
 params.X = X;
 params.U_ref = U_ref;

@@ -42,7 +42,7 @@ method = 'CA';
 params = default_learning_params(method);
 
 % Choose the user sparsity parameter depending on params.sparse_mode
-params.sparsity_param = 12;      % constrained model
+params.sparsity_param = 10;      % constrained model
 % params.sparsity_param = .2;     % unsonstrained lagrangian model
 
 params.num_epochs = 200;
@@ -57,12 +57,12 @@ stride = 8;     % set stride = patch_size to get disjoint patches
                 % set stride = 1 to get all overlapping patches
 params.X = crop_patches_of_img(img, patch_size, stride);
 
-% initialize with an analytic orthogonal dictionary
+% initialize by an analytic orthogonal dictionary
 % load('bases/DCT_08x08.mat', 'U_ref');
 % U_init = U_ref;
 % clear('U_ref');
 
-% initialize with random orthogonal dictionary
+% initialize by a random orthogonal dictionary
 num_atoms = num_dims;
 U_init = solve_orth_procrustes(randn(num_dims, num_atoms));
 params.U_init = U_init;
