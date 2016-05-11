@@ -55,7 +55,7 @@ clear('params');
 method = 'GF-OSC_cooling_learnrate';
 params = default_learning_params(method);
 
-% ==> !IMPORTANT! <==: Choose sparsity parameter depending on params.sparse_mode
+% ==> !IMPORTANT! <==: choose sparsity parameter depending on params.sparse_mode
 params.sparsity_param = sparsity_param;       % constrained model: expected number of non-zero coefficients per sample
 % params.sparsity_param = .4;                  % unsonstrained model: hard threshold
 

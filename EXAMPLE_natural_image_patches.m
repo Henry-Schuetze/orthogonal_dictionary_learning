@@ -41,9 +41,9 @@ img = im2double(img);
 method = 'CA';
 params = default_learning_params(method);
 
-% Choose the user sparsity parameter depending on params.sparse_mode
-params.sparsity_param = 10;      % constrained model
-% params.sparsity_param = .2;     % unsonstrained lagrangian model
+% ==> !IMPORTANT! <==: choose sparsity parameter depending on params.sparse_mode
+params.sparsity_param = 10;      % constrained model: expected number of non-zero coefficients per sample
+% params.sparsity_param = .2;     % unsonstrained model: hard threshold
 
 params.num_epochs = 200;
 % params.rand_seed = 0;
