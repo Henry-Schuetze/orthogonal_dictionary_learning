@@ -37,7 +37,7 @@ synthetic_mode = 'column_k-sparse';
 
 [X, Z] = create_synthetic_data_set(U_ref, num_samples, sparsity_param, synthetic_mode);
 
-% create an initial random basis
+% initialize dictionary by a random orthogonal dictionary
 num_atoms = num_dims;
 U_init = solve_orth_procrustes(randn(num_dims, num_atoms));
 

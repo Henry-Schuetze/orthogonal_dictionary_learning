@@ -54,15 +54,16 @@ num_dims = patch_size^2;
 
 % set shift/stride by which patches are extracted from the image
 stride = 8;     % set stride = patch_size to get disjoint patches
-                % set stride = 1 to get all overlapping patches
+                % set stride = 1 to get all overlapping patches (increases
+                % number of samples to approximately the number of pixels)
 params.X = crop_patches_of_img(img, patch_size, stride);
 
-% initialize by an analytic orthogonal dictionary
+% initialize dictionary by an analytic orthogonal dictionary
 % load('bases/DCT_08x08.mat', 'U_ref');
 % U_init = U_ref;
 % clear('U_ref');
 
-% initialize by a random orthogonal dictionary
+% initialize dictionary by a random orthogonal dictionary
 num_atoms = num_dims;
 U_init = solve_orth_procrustes(randn(num_dims, num_atoms));
 params.U_init = U_init;

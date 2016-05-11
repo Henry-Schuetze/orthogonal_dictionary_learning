@@ -59,7 +59,7 @@ If you have trouble to use the pre-compiled mex files:
  - update_OSC_fast.mexa64
 
 delete them and compile the mex files on your own by executing the 
-commands (within MATLAB and the primary toolbox path)
+commands (within MATLAB and at the primary toolbox path)
  - mex crop_patches_of_img.cpp
  - mex update_lambdaOSC_fast.cpp
  - mex update_OSC_fast.cpp
