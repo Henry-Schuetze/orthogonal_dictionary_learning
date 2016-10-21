@@ -45,7 +45,7 @@ params = default_learning_params(method);
 params.sparsity_param = 10;      % constrained model: expected number of non-zero coefficients per sample
 % params.sparsity_param = .2;     % unsonstrained model: hard threshold
 
-params.num_epochs = 200;
+params.num_epochs = 210;
 % params.rand_seed = 0;
 
 % set height (= width) of patches to extract from image
@@ -80,8 +80,18 @@ subplot(1,3,2);
 result = orthogonal_dictionary_learning(params);
 title('U_{final}');
 
+% semilog plot of costs including initial conditions (epoch 0)
 subplot(1,3,3);
-plot(result.cost_vec);
+semilogx(result.cost_vec);
+h = gca;
+minor_xtick_vec = 0;
+for i = 1:ceil(log10(result.cost_vec))
+    minor_xtick_vec = [minor_xtick_vec, (1:10) .* 10^(i-1)];
+end
+minor_xtick_vec =  unique(minor_xtick_vec+1);
+h.XAxis.MinorTickValues = unique(minor_xtick_vec);
+major_xtick_vec = [0, 10.^(0:ceil(log10(result.cost_vec)))]+1;
+set(gca, 'XTick', major_xtick_vec, 'XtickLabel', major_xtick_vec-1);
 title('costs during epochs');
 axis tight;
 ylim([0 max(result.cost_vec)]);

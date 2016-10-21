@@ -69,8 +69,8 @@ params.U_init = U_init;
 % params.write_dict_img_interval = 1;
 % params.dict_img_path = '/home/some/path/'; % let the string end with '/'
 
-figure(1)
-set(gcf, 'units', 'normalized', 'outerposition', [.5 .5 .5 .5])
+figure(1);
+set(gcf, 'units', 'normalized', 'outerposition', [.5 .5 .5 .5]);
 clf;
 
 subplot(2,2,1);
@@ -82,16 +82,16 @@ result = orthogonal_dictionary_learning(params);
 title('U_{final}');
 
 subplot(2,2,3);
-plot(result.cost_vec);
+plot(0:length(result.cost_vec)-1, result.cost_vec);
 title('costs during epochs');
 axis tight;
 ylim([-0.05 max(result.cost_vec)]);
 xlabel('epoch');
-ylabel('Cost Function Value')
+ylabel('Cost Function Value');
 grid on;
 
 subplot(2,2,4);
-errorbar(mean(result.sim_mat,1), var(result.sim_mat,[],1));
+errorbar(0:length(result.cost_vec)-1, mean(result.sim_mat,1), var(result.sim_mat,[],1));
 title('similarity(U, U_{ref})');
 axis tight;
 ylim([-.05 1.05]);

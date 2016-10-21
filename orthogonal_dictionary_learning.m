@@ -52,10 +52,10 @@
 %   supplied via the string params.dict_img_path, otherwise the images are
 %   stored into the current path
 %
-% params.show_dict_img_interval (optional, default: false): 
+% params.show_dict_img_interval (optional, default: 1): 
 %   if set, an image of the current dictionary is shown (assuming the
 %   atoms represent square patches) each time the epoch counter has a value
-%   that is a multiple of plot_dict_interval.
+%   that is a multiple of show_dict_img_interval.
 %
 % params.verbose_flag (optional, default: true)
 %   if set, output messages are printed during iterations
@@ -116,7 +116,7 @@ num_atoms = size(params.U, 2);
 % prepare iterative computation of cost function
 cost_flag = isfield(params, 'cost_interval');
 if cost_flag
-    params.cost_vec = zeros(1, floor(params.num_epochs/params.sim_interval));
+    params.cost_vec = zeros(1, floor(params.num_epochs/params.sim_interval)+1);
 end
 
 % prepare iterative computation of similarity between U and U_ref
@@ -131,7 +131,6 @@ if sim_flag
     end
 
     params.sim_mat = zeros(num_atoms, floor(params.num_epochs/params.sim_interval)+1);
-	params.sim_mat(:,1) = dictionary_similarity(params.U, params.U_ref);
 end
 
 % prepare iterative creation of dictionary image files
@@ -164,21 +163,25 @@ if strcmp(params.learn_type, 'online')
     params.t_max = params.num_epochs * num_samples;
 end
 
-for epoch = 1:params.num_epochs
+for epoch = 0:params.num_epochs
     
-    switch params.learn_type
-        case 'batch'
-            params = params.update(params);
-            
-        case 'online'
-            for sample_idx = randperm(num_samples);
-                params.x = params.X(:, sample_idx);
+    % do not update in epoch 0, only visualize and store subject to initial
+    % dictionary
+    if epoch > 0
+        switch params.learn_type
+            case 'batch'
                 params = params.update(params);
-                params.t = params.t + 1;
-            end
-            
-        otherwise
-            error('unknown params.learn_type');
+
+            case 'online'
+                for sample_idx = randperm(num_samples);
+                    params.x = params.X(:, sample_idx);
+                    params = params.update(params);
+                    params.t = params.t + 1;
+                end
+
+            otherwise
+                error('unknown params.learn_type');
+        end
     end
     
     if (show_dict_img_flag && ~mod(epoch, params.show_dict_img_interval)) ...
@@ -211,13 +214,13 @@ for epoch = 1:params.num_epochs
     
     % evaluate cost_function
     if cost_flag && ~mod(epoch, params.cost_interval)
-        params.cost_vec(epoch/params.cost_interval) = ...
+        params.cost_vec((epoch/params.cost_interval)+1) = ...
             cost_function(params.X, params.U, params.sparse_mode, params.sparsity_param);
     end
     
     % compute similarity between params.U and params.U_ref
     if sim_flag && ~mod(epoch, params.sim_interval)
-        params.sim_mat(:, floor(epoch/params.sim_interval)+1) = ...
+        params.sim_mat(:,(epoch/params.sim_interval)+1) = ...
             dictionary_similarity(params.U, params.U_ref);
         
         % if similarity stop condition is satisfied, resize params.sim_mat
@@ -225,7 +228,7 @@ for epoch = 1:params.num_epochs
         if min(params.sim_mat(:, floor(epoch/params.sim_interval)+1)) >= params.sim_stop_thresh
             params.sim_mat = params.sim_mat(:, 1:(floor(epoch/params.sim_interval)+1));
             if cost_flag
-                params.cost_vec = params.cost_vec(1:(floor(epoch/params.cost_interval)));
+                params.cost_vec = params.cost_vec(1:(floor(epoch/params.cost_interval)+1));
             end
             
             if verbose_flag
@@ -235,7 +238,7 @@ for epoch = 1:params.num_epochs
         end
     end
     
-    if verbose_flag
+    if verbose_flag && epoch > 0
         fprintf('epoch %08d completed.\n', epoch);
     end
 end
